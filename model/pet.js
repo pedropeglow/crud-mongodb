@@ -4,10 +4,6 @@ const PetSchema = new mongoose.Schema({
     nome: String,
     tipo: String,
     idade: Number,
-    usuario: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Usuario'
-    }
 }, {
     versionKey: false
 });

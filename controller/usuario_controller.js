@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 const Usuario = require("../model/usuario");
+const Pet = require("../model/pet");
 
 exports.listar = async (req, res) => { 
-    try{ 
-        const usuarios = await Usuario.find();
+    try{
+        const usuarios = await Usuario.find().populate('pet');
         res.json(usuarios);
     }
     catch(err) {
@@ -36,22 +37,45 @@ exports.buscarPorId = async (req, res) => {
 
 exports.inserir = async (req, res) => { 
     const usuarioRequest = req.body;
-    if(usuarioRequest && usuarioRequest.nome 
-        && usuarioRequest.email && usuarioRequest.senha){
-        const usuarioNovo = new Usuario(usuarioRequest);
-        usuarioNovo.senha = await bcrypt.hash(usuarioRequest.senha, 10);
+    if(usuarioRequest && usuarioRequest.nome && usuarioRequest.email && usuarioRequest.senha) {
+        if(usuarioRequest.pet) {
+            try {
+                const pet = await Pet.findById(usuarioRequest.pet);
+                if (!pet) {
+                    return res.status(404).json({
+                        Erro: "Pet não encontrado"
+                    });
+                }
 
-        try{ 
-            const usuarioSalvo = await usuarioNovo.save();
-            return res.status(201).json(usuarioSalvo);
+                const usuarioNovo = new Usuario({
+                    nome: usuarioRequest.nome,
+                    email: usuarioRequest.email,
+                    senha: usuarioRequest.senha,
+                    pet: pet._id
+                });
+
+                usuarioNovo.senha = await bcrypt.hash(usuarioRequest.senha, 10);
+                const usuarioSalvo = await usuarioNovo.save();
+
+                res.status(201).json(usuarioSalvo);
+            } catch (err) {
+                console.log(err)
+                res.status(500).json({Erro:err});
+            }
+        } else {
+            const usuarioNovo = new Usuario(usuarioRequest);
+            usuarioNovo.senha = await bcrypt.hash(usuarioRequest.senha, 10);
+
+            try { 
+                const usuarioSalvo = await usuarioNovo.save();
+                res.status(201).json(usuarioSalvo);
+            } catch (err) { 
+                res.status(500).json({Erro:err});
+            }
         }
-        catch(err) { 
-            res.status(500).json({Erro:err});
-        }
-    }
-    else{
+    } else {
         return res.status(400).json({
-            Erro: "Nome, email e/ou senha sao obrigatorios"
+            Erro: "Nome, email e/ou senha são obrigatórios"
         });
     }
 }
@@ -67,7 +91,28 @@ exports.atualizar = async (req, res) => {
         });
     }
 
-    try{ 
+    if(usuarioAlterar.pet){
+        try{
+            const pet = await Pet.findById(usuarioAlterar.pet);
+            if(!pet){
+                return res.status(404).json({
+                    Erro: "Pet não encontrado!"
+                })
+            }
+            const usuarioAtualizado = await Usuario.findByIdAndUpdate(id, usuarioAlterar, {new: true});
+            if(usuarioAtualizado){ 
+                const usuarioNovoHash = new Usuario(usuarioAtualizado);
+                usuarioNovoHash.senha = await bcrypt.hash(usuarioAtualizado.senha, 10);
+                return res.json(usuarioNovoHash);
+            }
+            else {
+                return res.status(404).json({ Erro: "Usuario nao encontrado"});
+            }
+        } catch(err) {
+            res.status(500).json({Erro:err});
+        }
+    }
+    else {
         const usuarioAtualizado = await Usuario.findByIdAndUpdate(id, usuarioAlterar, {new: true});
         if(usuarioAtualizado){ 
             const usuarioNovoHash = new Usuario(usuarioAtualizado);
@@ -77,10 +122,7 @@ exports.atualizar = async (req, res) => {
         else {
             return res.status(404).json({ Erro: "Usuario nao encontrado"});
         }
-    } catch(err) {
-        res.status(500).json({Erro:err});
-    }            
-
+    }
 }
 
 exports.deletar = async (req, res) => { 

@@ -5,7 +5,7 @@ const Usuario = require("../model/usuario");
 exports.listar = async (req, res, next) => { 
     try{
         
-        const pets = await Pet.find().populate('usuario');
+        const pets = await Pet.find();
         res.status(200).json(pets);
     }
     catch(err) {
@@ -32,7 +32,7 @@ exports.buscarPorId = async (req, res) => {
 
 exports.inserir = async (req, res) => { 
     const petRequest = req.body;
-    if(petRequest && petRequest.nome && petRequest.idade && petRequest.tipo && petRequest.usuario){
+    if(petRequest && petRequest.nome && petRequest.idade && petRequest.tipo){
         const usuario = await Usuario.findById(petRequest.usuario);
         console.log(usuario)
         const petNovo = new Pet(petRequest);
