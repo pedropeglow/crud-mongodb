@@ -5,7 +5,7 @@ const Usuario = require("../model/usuario");
 exports.listar = async (req, res, next) => { 
     try{
         
-        const pets = await Pet.find();
+        const pets = await Pet.find().populate('usuario');
         res.status(200).json(pets);
     }
     catch(err) {

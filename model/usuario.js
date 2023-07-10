@@ -4,10 +4,6 @@ const UsuarioSchema = new mongoose.Schema({
     nome: String,
     email: String,
     senha: String,
-    pet: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Pet'
-    }
 }, {
     versionKey: false
 });
