@@ -4,6 +4,7 @@ const rotaPet = require('./rotas/pet_rotas')
 const rotaLogin = require('./rotas/login_rotas')
 const rotaUsuario = require('./rotas/usuario_rotas')
 const loginMiddleware = require('./middleware/login_middleware')
+const cors = require('cors')
 require("dotenv-safe").config();
 const jwt = require('jsonwebtoken');
 
@@ -17,7 +18,7 @@ const trataLog = (req, res, next)=>{
  }
 
 	
-
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
@@ -32,7 +33,7 @@ mongoose.connect('mongodb+srv://pedropeglowm:123@cluster0.wsvjrcp.mongodb.net/ap
 
 app.use(trataLog);
 
-app.use('/api/pets',loginMiddleware.verifyJWT, rotaPet);
+app.use('/api/pets', loginMiddleware.verifyJWT, rotaPet);
 app.use('/api/login', rotaLogin);
 app.use('/api/usuarios', rotaUsuario);
 
